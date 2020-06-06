@@ -1,8 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
 	"os"
+	"time"
+
+	"github.com/eiannone/keyboard"
 )
 
 /*
@@ -23,6 +27,7 @@ VISUAL:
 4 -> GHOST
 
 DIRECTION:
+NONE -> -1
 LEFT -> 0
 UP -> 1
 LEFT -> 2
@@ -42,13 +47,15 @@ type Node struct {
 
 // Pacman is the player
 type Pacman struct {
-	currentNode Node
+	direction     int
+	nextDirection int
+	currentNode   Node
 }
 
-func (p Pacman) walk(direction int) {
+func (p Pacman) walk() {
 	var next Node
 
-	switch direction {
+	switch p.nextDirection {
 	case 0:
 		if p.currentNode.j < Dimension-1 {
 			next = nodeLayout[p.currentNode.i][p.currentNode.j+1]
@@ -68,6 +75,31 @@ func (p Pacman) walk(direction int) {
 	}
 
 	if next.tile != 1 {
+		switch p.direction {
+		case 0:
+			if p.currentNode.j < Dimension-1 {
+				next = nodeLayout[p.currentNode.i][p.currentNode.j+1]
+			}
+		case 1:
+			if p.currentNode.i > 0 {
+				next = nodeLayout[p.currentNode.i-1][p.currentNode.j]
+			}
+		case 2:
+			if p.currentNode.j > 0 {
+				next = nodeLayout[p.currentNode.i][p.currentNode.j-1]
+			}
+		case 3:
+			if p.currentNode.i < Dimension-1 {
+				next = nodeLayout[p.currentNode.i+1][p.currentNode.j]
+			}
+		}
+	} else {
+		p.direction = p.nextDirection
+	}
+
+	p.nextDirection = -1
+
+	if next.tile != 1 {
 		return
 	}
 
@@ -82,6 +114,32 @@ func (p Pacman) walk(direction int) {
 	p.currentNode.entity = 1
 	p.currentNode.hasDot = false
 	p.currentNode.visual = 3
+}
+
+func (p Pacman) move() {
+	for {
+		printLayout()
+		p.walk()
+		time.Sleep(3 * time.Second)
+
+		_, key, err := keyboard.GetSingleKey()
+		if err != nil {
+			panic(err)
+		}
+
+		switch key {
+		case keyboard.KeyArrowRight:
+			p.nextDirection = 0
+		case keyboard.KeyArrowUp:
+			p.nextDirection = 1
+		case keyboard.KeyArrowLeft:
+			p.nextDirection = 2
+		case keyboard.KeyArrowDown:
+			p.nextDirection = 3
+		default:
+			p.nextDirection = -1
+		}
+	}
 }
 
 // Ghost is the enemy
@@ -158,7 +216,9 @@ var done chan int
 
 	createNodes()
 	createPacman()
-	createGhosts(3)
+	createGhosts(0)
+
+	go pacman.move()
 
 	for _, i := range ghosts {
 		go i.moveToPacman()
@@ -203,7 +263,7 @@ func createNodes() {
 }
 
 func createPacman() {
-	pacman = Pacman{currentNode: randomEmptyWalkableTile()}
+	pacman = Pacman{nextDirection: -1, currentNode: randomEmptyWalkableTile()}
 	pacman.currentNode.entity = 1
 	pacman.currentNode.hasDot = false
 	pacman.currentNode.visual = 3
@@ -227,4 +287,14 @@ func randomEmptyWalkableTile() Node {
 	}
 
 	return node
+}
+
+func printLayout() {
+	for _, i := range nodeLayout {
+		for _, j := range i {
+			fmt.Printf("%d \t", j.visual)
+		}
+		fmt.Println()
+	}
+	fmt.Println()
 }
