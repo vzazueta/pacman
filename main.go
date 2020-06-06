@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	screenWidth  = 600
-	screenHeight = 800
+	screenWidth  = 600.0
+	screenHeight = 800.0
 )
 
 func textureFromBMP(renderer *sdl.Renderer, filename string) *sdl.Texture {
@@ -23,6 +23,36 @@ func textureFromBMP(renderer *sdl.Renderer, filename string) *sdl.Texture {
 	}
 
 	return tex
+}
+
+func getVisualNodes(renderer *sdl.Renderer) [][]visualNode {
+	cellSize := screenWidth / Dimension
+
+	fmt.Println(cellSize)
+	output := make([][]visualNode, Dimension)
+
+	yPos := cellSize / 2.0
+
+	for i := 0; i < Dimension; i++ {
+		xPos := cellSize / 2.0
+		row := make([]visualNode, Dimension)
+		for j := 0; j < Dimension; j++ {
+			row[j] = newNode(renderer, xPos, yPos)
+			xPos += cellSize
+		}
+		output[i] = row
+		yPos += cellSize
+
+	}
+	return output
+}
+
+func drawVisualNodes(visualNodes [][]visualNode, renderer *sdl.Renderer) {
+	for _, nodeRow := range visualNodes {
+		for _, node := range nodeRow {
+			node.draw(renderer)
+		}
+	}
 }
 
 func main() {
@@ -51,7 +81,7 @@ func main() {
 
 	plr := newPlayer(renderer)
 
-	nde := newNode(renderer)
+	visualNodes := getVisualNodes(renderer)
 
 	for {
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
@@ -65,7 +95,8 @@ func main() {
 		renderer.Clear()
 
 		plr.draw(renderer)
-		nde.draw(renderer)
+		drawVisualNodes(visualNodes, renderer)
+		//nde.draw(renderer)
 
 		renderer.Present()
 	}

@@ -3,7 +3,6 @@ package main
 import (
 	"math/rand"
 	"os"
-	"time"
 )
 
 /*
@@ -154,7 +153,7 @@ var ghosts []Ghost
 
 var done chan int
 
-func main() {
+/*func main() {
 	rand.Seed(time.Now().UnixNano())
 
 	createNodes()
@@ -166,7 +165,7 @@ func main() {
 	}
 
 	<-done
-}
+}*/
 
 func gameover() {
 	done <- 0

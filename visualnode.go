@@ -8,21 +8,21 @@ const (
 	nodeSize = 50
 )
 
-type node struct {
+type visualNode struct {
 	tex  *sdl.Texture
 	x, y float64
 }
 
-func newNode(renderer *sdl.Renderer) (n node) {
+func newNode(renderer *sdl.Renderer, xcoord float64, ycoord float64) (n visualNode) {
 
 	n.tex = textureFromBMP(renderer, "sprites/node.bmp")
-	n.x = screenWidth / 2.0
-	n.y = screenHeight / 2.0
+	n.x = xcoord
+	n.y = ycoord
 
 	return n
 }
 
-func (n *node) draw(renderer *sdl.Renderer) {
+func (n *visualNode) draw(renderer *sdl.Renderer) {
 	x := n.x - nodeSize/2.0
 	y := n.y - nodeSize/2.0
 	renderer.Copy(n.tex,
