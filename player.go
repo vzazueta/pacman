@@ -1,31 +1,31 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/veandco/go-sdl2/sdl"
 )
 
+const (
+	playerSize = 105
+)
+
 type player struct {
-	tex *sdl.Texture
+	tex  *sdl.Texture
+	x, y float64
 }
 
-func newPlayer(renderer *sdl.Renderer) (p player, err error) {
-	img, err := sdl.LoadBMP("sprites/player.bmp")
-	if err != nil {
-		return player{}, fmt.Errorf("loading player sprite: %v", err)
-	}
-	defer img.Free()
-	p.tex, err = renderer.CreateTextureFromSurface(img)
-	if err != nil {
-		return player{}, fmt.Errorf("creating player texture: %v", err)
-	}
+func newPlayer(renderer *sdl.Renderer) (p player) {
 
-	return p, nil
+	p.tex = textureFromBMP(renderer, "sprites/player.bmp")
+	p.x = 50
+	p.y = 50
+
+	return p
 }
 
 func (p *player) draw(renderer *sdl.Renderer) {
+	x := p.x - playerSize/2.0
+	y := p.y - playerSize/2.0
 	renderer.Copy(p.tex,
-		&sdl.Rect{X: 0, Y: 0, W: 105, H: 105},
-		&sdl.Rect{X: 40, Y: 20, W: 105, H: 105})
+		&sdl.Rect{X: 0, Y: 0, W: playerSize, H: playerSize},
+		&sdl.Rect{X: int32(x), Y: int32(y), W: playerSize, H: playerSize})
 }

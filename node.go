@@ -1,34 +1,31 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/veandco/go-sdl2/sdl"
 )
 
+const (
+	nodeSize = 50
+)
+
 type node struct {
-	tex *sdl.Texture
+	tex  *sdl.Texture
+	x, y float64
 }
 
-func newNode(renderer *sdl.Renderer) (n node, err error) {
-	img, err := sdl.LoadBMP("sprites/node.bmp")
-	if err != nil {
-		return node{}, fmt.Errorf("loading node sprite: %v", err)
-	}
-	defer img.Free()
+func newNode(renderer *sdl.Renderer) (n node) {
 
-	n.tex, err = renderer.CreateTextureFromSurface(img)
+	n.tex = textureFromBMP(renderer, "sprites/node.bmp")
+	n.x = screenWidth / 2.0
+	n.y = screenHeight / 2.0
 
-	if err != nil {
-		return node{}, fmt.Errorf("creating node texture: %v", err)
-	}
-
-	return n, nil
-
+	return n
 }
 
 func (n *node) draw(renderer *sdl.Renderer) {
+	x := n.x - nodeSize/2.0
+	y := n.y - nodeSize/2.0
 	renderer.Copy(n.tex,
-		&sdl.Rect{X: 0, Y: 0, W: 105, H: 105},
-		&sdl.Rect{X: 150, Y: 20, W: 105, H: 105})
+		&sdl.Rect{X: 0, Y: 0, W: nodeSize, H: nodeSize},
+		&sdl.Rect{X: int32(x), Y: int32(y), W: nodeSize, H: nodeSize})
 }
