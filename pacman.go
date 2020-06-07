@@ -49,28 +49,29 @@ type Node struct {
 type Pacman struct {
 	direction     int
 	nextDirection int
-	currentNode   Node
+	currentNode   *Node
 }
 
 func (p Pacman) walk() {
-	var next Node
+	temp := Node{}
+	next := &temp
 
 	switch p.nextDirection {
 	case 0:
 		if p.currentNode.j < Dimension-1 {
-			next = nodeLayout[p.currentNode.i][p.currentNode.j+1]
+			next = &nodeLayout[p.currentNode.i][p.currentNode.j+1]
 		}
 	case 1:
 		if p.currentNode.i > 0 {
-			next = nodeLayout[p.currentNode.i-1][p.currentNode.j]
+			next = &nodeLayout[p.currentNode.i-1][p.currentNode.j]
 		}
 	case 2:
 		if p.currentNode.j > 0 {
-			next = nodeLayout[p.currentNode.i][p.currentNode.j-1]
+			next = &nodeLayout[p.currentNode.i][p.currentNode.j-1]
 		}
 	case 3:
 		if p.currentNode.i < Dimension-1 {
-			next = nodeLayout[p.currentNode.i+1][p.currentNode.j]
+			next = &nodeLayout[p.currentNode.i+1][p.currentNode.j]
 		}
 	}
 
@@ -78,19 +79,19 @@ func (p Pacman) walk() {
 		switch p.direction {
 		case 0:
 			if p.currentNode.j < Dimension-1 {
-				next = nodeLayout[p.currentNode.i][p.currentNode.j+1]
+				next = &nodeLayout[p.currentNode.i][p.currentNode.j+1]
 			}
 		case 1:
 			if p.currentNode.i > 0 {
-				next = nodeLayout[p.currentNode.i-1][p.currentNode.j]
+				next = &nodeLayout[p.currentNode.i-1][p.currentNode.j]
 			}
 		case 2:
 			if p.currentNode.j > 0 {
-				next = nodeLayout[p.currentNode.i][p.currentNode.j-1]
+				next = &nodeLayout[p.currentNode.i][p.currentNode.j-1]
 			}
 		case 3:
 			if p.currentNode.i < Dimension-1 {
-				next = nodeLayout[p.currentNode.i+1][p.currentNode.j]
+				next = &nodeLayout[p.currentNode.i+1][p.currentNode.j]
 			}
 		}
 	} else {
@@ -117,55 +118,69 @@ func (p Pacman) walk() {
 }
 
 func (p Pacman) move() {
+	keyEvents, err := keyboard.GetKeys(10)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		_ = keyboard.Close()
+	}()
+
 	for {
 		printLayout()
 		p.walk()
-		time.Sleep(3 * time.Second)
+		time.Sleep(1000 * time.Millisecond)
 
-		_, key, err := keyboard.GetSingleKey()
-		if err != nil {
-			panic(err)
-		}
+		for len(keyEvents) != 0 {
+			event := <-keyEvents
 
-		switch key {
-		case keyboard.KeyArrowRight:
-			p.nextDirection = 0
-		case keyboard.KeyArrowUp:
-			p.nextDirection = 1
-		case keyboard.KeyArrowLeft:
-			p.nextDirection = 2
-		case keyboard.KeyArrowDown:
-			p.nextDirection = 3
-		default:
-			p.nextDirection = -1
+			switch event.Key {
+			case keyboard.KeyArrowRight:
+				p.nextDirection = 0
+			case keyboard.KeyArrowUp:
+				p.nextDirection = 1
+			case keyboard.KeyArrowLeft:
+				p.nextDirection = 2
+			case keyboard.KeyArrowDown:
+				p.nextDirection = 3
+			default:
+				p.nextDirection = -1
+			}
+
+			for len(keyEvents) != 0 {
+				<-keyEvents
+			}
+
+			break
 		}
 	}
 }
 
 // Ghost is the enemy
 type Ghost struct {
-	currentNode Node
+	currentNode *Node
 }
 
 func (g Ghost) walk(direction int) {
-	var next Node
+	temp := Node{}
+	next := &temp
 
 	switch direction {
 	case 0:
 		if g.currentNode.j < Dimension-1 {
-			next = nodeLayout[g.currentNode.i][g.currentNode.j+1]
+			next = &nodeLayout[g.currentNode.i][g.currentNode.j+1]
 		}
 	case 1:
 		if g.currentNode.i > 0 {
-			next = nodeLayout[g.currentNode.i-1][g.currentNode.j]
+			next = &nodeLayout[g.currentNode.i-1][g.currentNode.j]
 		}
 	case 2:
 		if g.currentNode.j > 0 {
-			next = nodeLayout[g.currentNode.i][g.currentNode.j-1]
+			next = &nodeLayout[g.currentNode.i][g.currentNode.j-1]
 		}
 	case 3:
 		if g.currentNode.i < Dimension-1 {
-			next = nodeLayout[g.currentNode.i+1][g.currentNode.j]
+			next = &nodeLayout[g.currentNode.i+1][g.currentNode.j]
 		}
 	}
 
@@ -211,7 +226,7 @@ var ghosts []Ghost
 
 var done chan int
 
-/*func main() {
+func main() {
 	rand.Seed(time.Now().UnixNano())
 
 	createNodes()
@@ -225,7 +240,7 @@ var done chan int
 	}
 
 	<-done
-}*/
+}
 
 func gameover() {
 	done <- 0
@@ -279,11 +294,12 @@ func createGhosts(n int) {
 	}
 }
 
-func randomEmptyWalkableTile() Node {
-	node := Node{}
+func randomEmptyWalkableTile() *Node {
+	temp := Node{}
+	node := &temp
 
 	for node.tile != 1 || node.entity != 0 {
-		node = nodeLayout[rand.Intn(Dimension)][rand.Intn(Dimension)]
+		node = &nodeLayout[rand.Intn(Dimension)][rand.Intn(Dimension)]
 	}
 
 	return node
