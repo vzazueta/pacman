@@ -1,6 +1,6 @@
 package main
 
-import (
+/*import (
 	"fmt"
 	"io"
 	"os"
@@ -38,4 +38,4 @@ func myErr(err error) error {
 	}
 
 	return nil
-}
+}*/

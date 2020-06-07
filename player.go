@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/veandco/go-sdl2/sdl"
 )
 
@@ -23,6 +25,7 @@ func newPlayer(renderer *sdl.Renderer) (p player) {
 }
 
 func (p *player) draw(renderer *sdl.Renderer) {
+	fmt.Println("drawing plater")
 	x := p.x - playerSize/2.0
 	y := p.y - playerSize/2.0
 	renderer.Copy(p.tex,

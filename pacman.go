@@ -6,7 +6,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/eiannone/keyboard"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
@@ -119,42 +118,65 @@ func (p *Pacman) walk() {
 }
 
 func (p *Pacman) move() {
-	keyEvents, err := keyboard.GetKeys(10)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		_ = keyboard.Close()
-	}()
 
 	for {
-		printLayout()
+		//printLayout()
 		p.walk()
-		time.Sleep(1000 * time.Millisecond)
+		time.Sleep(3000 * time.Millisecond)
+		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
+			switch t := event.(type) {
+			case *sdl.KeyboardEvent:
+				//fmt.Printf("type:%d\tsym:%d\n", t.Type, t.Keysym.Sym)
+				switch t.Keysym.Sym {
+				case ARROW_DOWN:
+					//fmt.Println("down")
+					p.nextDirection = 3
+				case ARROW_UP:
+					//fmt.Println("up")
+					p.nextDirection = 1
+				case ARROW_LEFT:
+					//fmt.Println("left")
+					p.nextDirection = 2
+				case ARROW_RIGHT:
+					//fmt.Println("right")
+					p.nextDirection = 0
 
-		for len(keyEvents) != 0 {
-			event := <-keyEvents
+				}
 
-			switch event.Key {
-			case keyboard.KeyArrowRight:
-				p.nextDirection = 0
-			case keyboard.KeyArrowUp:
-				p.nextDirection = 1
-			case keyboard.KeyArrowLeft:
-				p.nextDirection = 2
-			case keyboard.KeyArrowDown:
-				p.nextDirection = 3
-			default:
-				p.nextDirection = -1
+			case *sdl.QuitEvent:
+				fmt.Println("finish")
+				done <- 0
+				os.Exit(1)
 			}
-
-			for len(keyEvents) != 0 {
-				<-keyEvents
-			}
-
-			break
 		}
 	}
+
+	/*for {
+
+	}*/
+
+	//printLayout()
+	//p.walk()
+	//time.Sleep(200 * time.Millisecond)
+
+	/*for {
+		keys := sdl.GetKeyboardState()
+
+		if keys[sdl.SCANCODE_LEFT] == 1 {
+			fmt.Println("left")
+			p.nextDirection = 2
+		} else if keys[sdl.SCANCODE_RIGHT] == 1 {
+			fmt.Println("right")
+			p.nextDirection = 0
+		} else if keys[sdl.SCANCODE_UP] == 1 {
+			fmt.Println("up")
+			p.nextDirection = 1
+		} else if keys[sdl.SCANCODE_DOWN] == 1 {
+			fmt.Println("down")
+			p.nextDirection = 3
+		}
+		continue
+	}*/
 }
 
 // Ghost is the enemy
@@ -212,7 +234,13 @@ func (g Ghost) moveToPacman() {
 }
 
 // Dimension of the gmae
-const Dimension = 5
+const (
+	Dimension   = 5
+	ARROW_DOWN  = 1073741905
+	ARROW_UP    = 1073741906
+	ARROW_LEFT  = 1073741904
+	ARROW_RIGHT = 1073741903
+)
 
 var layout = [Dimension][Dimension]int{
 	{0, 0, 1, 1, 1},
@@ -240,7 +268,7 @@ func main() {
 		go i.moveToPacman()
 	}
 
-	visualSetup()
+	go visualSetup()
 
 	<-done
 }
@@ -347,19 +375,16 @@ func visualSetup() {
 	visualNodes := getVisualNodes(renderer)
 
 	for {
-		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
+		/*for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 			switch event.(type) {
-			case *sdl.QuitEvent:
-				return
-			}
-		}
+
+		}*/
 
 		renderer.SetDrawColor(0, 0, 0, 0)
 		renderer.Clear()
 
 		plr.draw(renderer)
 		drawVisualNodes(visualNodes, renderer)
-		//nde.draw(renderer)
 
 		renderer.Present()
 	}
