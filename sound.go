@@ -29,6 +29,7 @@ func playSound(path string) error {
 	if _, err := io.Copy(player, decoder); err != nil {
 		return err
 	}
+
 	return nil
 }
 
