@@ -7,8 +7,15 @@ import (
 )
 
 const (
-	screenWidth  = 600.0
-	screenHeight = 800.0
+	screenWidth             = 600.0
+	screenHeight            = 800.0
+	death_sound_path        = "soundeffects/pacman_death.mp3"
+	munch_sound_path        = "soundeffects/pacman_chomp.mp3"
+	intermission_sound_path = "soundeffects/pacman_intermission.mp3"
+	eat_fruit_sound_path    = "soundeffects/pacman_eatfruit.mp3"
+	eat_ghost_sound_path    = "soundeffects/pacman_eatghost.mp3"
+	extra_life_sound_path   = "soundeffects/pacman_extrapac.mp3"
+	background_song_path    = "soundeffects/pacman_fever.mp3"
 )
 
 func textureFromBMP(renderer *sdl.Renderer, filename string) *sdl.Texture {
