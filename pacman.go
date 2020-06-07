@@ -42,7 +42,7 @@ type Node struct {
 	i      int
 	j      int
 	visual int
-	next   []Node
+	next   []*Node
 }
 
 // Pacman is the player
@@ -128,19 +128,18 @@ func (p *Pacman) move() {
 			case *sdl.KeyboardEvent:
 				//fmt.Printf("type:%d\tsym:%d\n", t.Type, t.Keysym.Sym)
 				switch t.Keysym.Sym {
-				case ARROW_DOWN:
+				case ArrowDown:
 					//fmt.Println("down")
 					p.nextDirection = 3
-				case ARROW_UP:
+				case ArrowUp:
 					//fmt.Println("up")
 					p.nextDirection = 1
-				case ARROW_LEFT:
+				case ArrowLeft:
 					//fmt.Println("left")
 					p.nextDirection = 2
-				case ARROW_RIGHT:
+				case ArrowRight:
 					//fmt.Println("right")
 					p.nextDirection = 0
-
 				}
 
 			case *sdl.QuitEvent:
@@ -182,9 +181,10 @@ func (p *Pacman) move() {
 // Ghost is the enemy
 type Ghost struct {
 	currentNode *Node
+	seen        []*Node
 }
 
-func (g Ghost) walk(direction int) {
+func (g *Ghost) walk(direction int) {
 	temp := Node{}
 	next := &temp
 
@@ -229,17 +229,52 @@ func (g Ghost) walk(direction int) {
 	g.moveToPacman()
 }
 
-func (g Ghost) moveToPacman() {
-	g.walk(0)
+func (g *Ghost) moveToPacman() {
+	g.seen = make([]*Node, 1)
+	g.seen[0] = g.currentNode
+	g.walk(getAdjacentDirection(g.currentNode, g.getNextNode(g.currentNode, make([]*Node, 0))))
+	time.Sleep(3000 * time.Millisecond)
+}
+
+func (g *Ghost) getNextNode(node *Node, path []*Node) *Node {
+	if node.entity == 3 {
+		return path[0]
+	}
+
+	for _, i := range node.next {
+		if i.tile == 1 {
+			found := false
+
+			for _, j := range g.seen {
+				if i == j {
+					found = true
+					break
+				}
+			}
+
+			if found {
+				continue
+			}
+
+			g.seen = append(g.seen, i)
+			temp := g.getNextNode(i, append(path, i))
+			if temp.tile == 1 {
+				return temp
+			}
+		}
+	}
+
+	temp := Node{}
+	return &temp
 }
 
 // Dimension of the gmae
 const (
-	Dimension   = 5
-	ARROW_DOWN  = 1073741905
-	ARROW_UP    = 1073741906
-	ARROW_LEFT  = 1073741904
-	ARROW_RIGHT = 1073741903
+	Dimension  = 5
+	ArrowDown  = 1073741905
+	ArrowUp    = 1073741906
+	ArrowLeft  = 1073741904
+	ArrowRight = 1073741903
 )
 
 var layout = [Dimension][Dimension]int{
@@ -278,7 +313,7 @@ func gameover() {
 	os.Exit(1)
 }
 
-func getAdjacentDirection(node1, node2 Node) int {
+func getAdjacentDirection(node1, node2 *Node) int {
 	if node1.j < node2.j {
 		return 0
 	} else if node1.i > node2.i {
@@ -293,16 +328,16 @@ func getAdjacentDirection(node1, node2 Node) int {
 func createNodes() {
 	for i := range layout {
 		for j := range layout[i] {
-			nodeLayout[i][j] = Node{tile: layout[i][j], hasDot: true, i: i, j: j, visual: layout[i][j], next: make([]Node, 4)}
+			nodeLayout[i][j] = Node{tile: layout[i][j], hasDot: true, i: i, j: j, visual: layout[i][j], next: make([]*Node, 4)}
 
 			if i > 0 {
-				nodeLayout[i-1][j].next[3] = nodeLayout[i][j]
-				nodeLayout[i][j].next[1] = nodeLayout[i-1][j]
+				nodeLayout[i-1][j].next[3] = &nodeLayout[i][j]
+				nodeLayout[i][j].next[1] = &nodeLayout[i-1][j]
 			}
 
 			if j > 0 {
-				nodeLayout[i][j-1].next[0] = nodeLayout[i][j]
-				nodeLayout[i][j].next[2] = nodeLayout[i][j-1]
+				nodeLayout[i][j-1].next[0] = &nodeLayout[i][j]
+				nodeLayout[i][j].next[2] = &nodeLayout[i][j-1]
 			}
 		}
 	}
@@ -388,5 +423,4 @@ func visualSetup() {
 
 		renderer.Present()
 	}
-
 }
