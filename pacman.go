@@ -52,7 +52,7 @@ type Pacman struct {
 	currentNode   *Node
 }
 
-func (p Pacman) walk() {
+func (p *Pacman) walk() {
 	temp := Node{}
 	next := &temp
 
@@ -117,7 +117,7 @@ func (p Pacman) walk() {
 	p.currentNode.visual = 3
 }
 
-func (p Pacman) move() {
+func (p *Pacman) move() {
 	keyEvents, err := keyboard.GetKeys(10)
 	if err != nil {
 		panic(err)
