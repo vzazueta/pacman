@@ -13,6 +13,10 @@ type visualNode struct {
 	x, y float64
 }
 
+func (n *visualNode) getCoin(renderer *sdl.Renderer){
+	n.tex = textureFromBMP(renderer, "sprites/empty.bmp")
+}
+
 func newNode(renderer *sdl.Renderer, xcoord float64, ycoord float64) (n visualNode) {
 
 	n.tex = textureFromBMP(renderer, "sprites/node.bmp")

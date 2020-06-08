@@ -110,6 +110,7 @@ func (p *Pacman) walk() {
 
 	p.currentNode.entity = 0
 	p.currentNode.visual = 2
+	visualNodes[p.currentNode.i][p.currentNode.j].getCoin(renderer)
 
 	p.currentNode = next
 	p.currentNode.entity = 1
@@ -287,6 +288,9 @@ var layout = [Dimension][Dimension]int{
 var nodeLayout [Dimension][Dimension]Node
 var pacman Pacman
 var ghosts []Ghost
+var visualNodes [Dimension][Dimension] visualNode
+var plr player
+var renderer sdl.Renderer
 
 var done chan int
 
@@ -405,9 +409,9 @@ func visualSetup() {
 	}
 	defer renderer.Destroy()
 
-	plr := newPlayer(renderer)
+	plr = newPlayer(renderer)
 
-	visualNodes := getVisualNodes(renderer)
+	visualNodes = getVisualNodes(renderer)
 
 	for {
 		/*for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
