@@ -411,7 +411,7 @@ func visualSetup() {
 
 	plr = newPlayer(renderer)
 
-	visualNodes = getVisualNodes(renderer)
+	visualNodes = getVisualNodes(renderer, nodeLayout	)
 
 	for {
 		/*for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {

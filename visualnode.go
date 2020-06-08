@@ -17,9 +17,14 @@ func (n *visualNode) getCoin(renderer *sdl.Renderer){
 	n.tex = textureFromBMP(renderer, "sprites/empty.bmp")
 }
 
-func newNode(renderer *sdl.Renderer, xcoord float64, ycoord float64) (n visualNode) {
+func newNode(renderer *sdl.Renderer, xcoord float64, ycoord float64, visual int) (n visualNode) {
 
-	n.tex = textureFromBMP(renderer, "sprites/node.bmp")
+	switch visual{
+	case 0:
+		n.tex = textureFromBMP(renderer, "sprites/wall.bmp")
+	case 1:
+		n.tex = textureFromBMP(renderer, "sprites/node.bmp")
+	}
 	n.x = xcoord
 	n.y = ycoord
 
