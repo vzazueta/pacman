@@ -110,7 +110,6 @@ func (p *Pacman) walk() {
 
 	p.currentNode.entity = 0
 	p.currentNode.visual = 2
-
 	p.currentNode = next
 	p.currentNode.entity = 1
 	p.currentNode.hasDot = false
@@ -372,7 +371,7 @@ func visualSetup() {
 
 	plr := newPlayer(renderer)
 
-	visualNodes := getVisualNodes(renderer)
+	visualNodes := getVisualNodes(renderer) //pasar a variable global
 
 	for {
 		/*for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {

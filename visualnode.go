@@ -4,6 +4,8 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
+// relacionar numero de estado con sprite
+
 const (
 	nodeSize = 50
 )
@@ -20,6 +22,10 @@ func newNode(renderer *sdl.Renderer, xcoord float64, ycoord float64) (n visualNo
 	n.y = ycoord
 
 	return n
+}
+
+func changeTex() {
+
 }
 
 func (n *visualNode) draw(renderer *sdl.Renderer) {
