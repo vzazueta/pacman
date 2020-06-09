@@ -32,7 +32,7 @@ func textureFromBMP(renderer *sdl.Renderer, filename string) *sdl.Texture {
 	return tex
 }
 
-func getVisualNodes(renderer *sdl.Renderer) [][]visualNode {
+func getVisualNodes(renderer *sdl.Renderer, layout [][]int) [][]visualNode {
 	cellSize := screenWidth / Dimension
 	// read from pacman.go layout
 	fmt.Println(cellSize)
@@ -44,13 +44,14 @@ func getVisualNodes(renderer *sdl.Renderer) [][]visualNode {
 		xPos := cellSize / 2.0
 		row := make([]visualNode, Dimension)
 		for j := 0; j < Dimension; j++ {
-			row[j] = newNode(renderer, xPos, yPos) //layout[i][j]
+			row[j] = newNode(renderer, xPos, yPos, layout[i][j])
 			xPos += cellSize
 		}
 		output[i] = row
 		yPos += cellSize
 
 	}
+	fmt.Println(len(output))
 	return output
 }
 

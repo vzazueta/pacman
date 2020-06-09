@@ -110,6 +110,8 @@ func (p *Pacman) walk() {
 
 	p.currentNode.entity = 0
 	p.currentNode.visual = 2
+	visualNodes[p.currentNode.i][p.currentNode.j].getCoin(renderer)
+
 	p.currentNode = next
 	p.currentNode.entity = 1
 	p.currentNode.hasDot = false
@@ -121,23 +123,23 @@ func (p *Pacman) move() {
 	for {
 		//printLayout()
 		p.walk()
-		time.Sleep(3000 * time.Millisecond)
+		//time.Sleep(3000 * time.Millisecond)
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 			switch t := event.(type) {
 			case *sdl.KeyboardEvent:
 				//fmt.Printf("type:%d\tsym:%d\n", t.Type, t.Keysym.Sym)
 				switch t.Keysym.Sym {
 				case ArrowDown:
-					//fmt.Println("down")
+					fmt.Println("down")
 					p.nextDirection = 3
 				case ArrowUp:
-					//fmt.Println("up")
+					fmt.Println("up")
 					p.nextDirection = 1
 				case ArrowLeft:
-					//fmt.Println("left")
+					fmt.Println("left")
 					p.nextDirection = 2
 				case ArrowRight:
-					//fmt.Println("right")
+					fmt.Println("right")
 					p.nextDirection = 0
 				}
 
@@ -184,6 +186,7 @@ type Ghost struct {
 }
 
 func (g *Ghost) walk(direction int) {
+
 	temp := Node{}
 	next := &temp
 
@@ -276,16 +279,21 @@ const (
 	ArrowRight = 1073741903
 )
 
-var layout = [Dimension][Dimension]int{
+var layout = [][]int{
 	{0, 0, 1, 1, 1},
 	{1, 1, 1, 0, 1},
 	{1, 0, 1, 0, 1},
 	{1, 1, 1, 0, 1},
 	{0, 0, 1, 1, 1}}
 
-var nodeLayout [Dimension][Dimension]Node
+var nodeLayout [][]Node
 var pacman Pacman
 var ghosts []Ghost
+var visualNodes [][]visualNode
+var plr player
+var renderer *sdl.Renderer
+
+//var load chan int
 
 var done chan int
 
@@ -296,13 +304,11 @@ func main() {
 	createPacman()
 	createGhosts(0)
 
-	go pacman.move()
-
 	for _, i := range ghosts {
 		go i.moveToPacman()
 	}
 
-	go visualSetup()
+	//go visualSetup()
 
 	<-done
 }
@@ -325,7 +331,9 @@ func getAdjacentDirection(node1, node2 *Node) int {
 }
 
 func createNodes() {
+	nodeLayout = make([][]Node, Dimension)
 	for i := range layout {
+		nodeLayout[i] = make([]Node, Dimension)
 		for j := range layout[i] {
 			nodeLayout[i][j] = Node{tile: layout[i][j], hasDot: true, i: i, j: j, visual: layout[i][j], next: make([]*Node, 4)}
 
@@ -340,6 +348,7 @@ func createNodes() {
 			}
 		}
 	}
+	go visualSetup()
 }
 
 func createPacman() {
@@ -387,7 +396,7 @@ func visualSetup() {
 	}
 
 	window, err := sdl.CreateWindow(
-		"Hentai Pacman",
+		"Pacman",
 		sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
 		screenWidth, screenHeight,
 		sdl.WINDOW_OPENGL)
@@ -397,18 +406,21 @@ func visualSetup() {
 	}
 	defer window.Destroy()
 
-	renderer, err := sdl.CreateRenderer(window, -1, sdl.RENDERER_ACCELERATED)
+	renderer, err = sdl.CreateRenderer(window, -1, sdl.RENDERER_SOFTWARE)
 	if err != nil {
 		fmt.Println("initializing renderer:", err)
 		return
 	}
+	fmt.Println("renderer created")
 	defer renderer.Destroy()
 
-	plr := newPlayer(renderer)
+	plr = newPlayer(renderer)
 
-	visualNodes := getVisualNodes(renderer) //pasar a variable global
+	visualNodes = getVisualNodes(renderer, layout)
+	go pacman.move()
 
 	for {
+		//fmt.Println("uwu")
 		/*for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 			switch event.(type) {
 
