@@ -110,17 +110,17 @@ func (p *Pacman) walk() {
 
 	p.currentNode.entity = 0
 	p.currentNode.visual = 2
-	visualNodes[p.currentNode.i][p.currentNode.j].updateTex(renderer, p.currentNode.visual)
+	//visualNodes[p.currentNode.i][p.currentNode.j].updateTex(renderer, p.currentNode.visual)
 
 	p.currentNode = next
 	p.currentNode.entity = 1
 	p.currentNode.hasDot = false
 	p.currentNode.visual = 3
-	visualNodes[p.currentNode.i][p.currentNode.j].updateTex(renderer, p.currentNode.visual)
+	//visualNodes[p.currentNode.i][p.currentNode.j].updateTex(renderer, p.currentNode.visual)
 }
 
 func (p *Pacman) move() {
-	visualNodes[p.currentNode.i][p.currentNode.j].updateTex(renderer, p.currentNode.visual)
+	//visualNodes[p.currentNode.i][p.currentNode.j].updateTex(renderer, p.currentNode.visual)
 	for {
 		//printLayout()
 		p.walk()
@@ -131,16 +131,16 @@ func (p *Pacman) move() {
 				//fmt.Printf("type:%d\tsym:%d\n", t.Type, t.Keysym.Sym)
 				switch t.Keysym.Sym {
 				case ArrowDown:
-					fmt.Println("down")
+					//fmt.Println("down")
 					p.nextDirection = 3
 				case ArrowUp:
-					fmt.Println("up")
+					//fmt.Println("up")
 					p.nextDirection = 1
 				case ArrowLeft:
-					fmt.Println("left")
+					//fmt.Println("left")
 					p.nextDirection = 2
 				case ArrowRight:
-					fmt.Println("right")
+					//fmt.Println("right")
 					p.nextDirection = 0
 				}
 
@@ -183,7 +183,8 @@ func (p *Pacman) move() {
 // Ghost is the enemy
 type Ghost struct {
 	currentNode *Node
-	seen        []*Node
+	seen        map[*Node]bool
+	path        *[]*Node
 }
 
 func (g *Ghost) walk(direction int) {
@@ -229,47 +230,64 @@ func (g *Ghost) walk(direction int) {
 	g.currentNode.entity = 2
 	g.currentNode.visual = 4
 
-	fmt.Println("at walk: ", g)
-	g.moveToPacman()
+	//fmt.Println("at walk: ", g)
+	//visualNodes[g.currentNode.i][g.currentNode.j].updateTex(renderer, g.currentNode.visual)
+	//g.moveToPacman()
 }
 
 func (g *Ghost) moveToPacman() {
-	g.seen = make([]*Node, 1)
-	g.seen[0] = g.currentNode
-	//g.walk(getAdjacentDirection(g.currentNode, g.getNextNode(g.currentNode, make([]*Node, 0))))
-	time.Sleep(3000 * time.Millisecond)
+	if len(*g.path) < 1 {
+
+		g.seen = make(map[*Node]bool, 0)
+		g.seen[g.currentNode] = true
+
+		tmp := make([]*Node, 0)
+		g.getNextNode(g.currentNode, &tmp)
+		fmt.Println("the length: ", len(*g.path))
+		for _, k := range *g.path {
+			fmt.Printf("uwu: %d, %d\n", k.i, k.j)
+		}
+		//g.moveToPacman()
+	} else {
+		g.walk(getAdjacentDirection(g.currentNode, (*g.path)[0]))
+		fmt.Println(len(*g.path))
+		tmp := (*g.path)[1:]
+		g.path = &tmp
+	}
+
+	time.Sleep(500 * time.Millisecond)
+	g.moveToPacman()
 }
 
-func (g *Ghost) getNextNode(node *Node, path []*Node) *Node {
+func (g *Ghost) getNextNode(node *Node, path *[]*Node) *[]*Node {
+	//fmt.Printf("%d, %d  %d\n", node.i, node.j, len(path))
+
 	if node.entity == 1 {
-		return path[0]
+		//fmt.Printf("%d, %d  %d\n", node.i, node.j, len(*path))
+		return path
 	}
 
 	for _, i := range node.next {
 		if i.tile == 1 {
-			found := false
-
-			for _, j := range g.seen {
-				if i == j {
-					found = true
-					break
-				}
-			}
-
-			if found {
+			if g.seen[i] {
 				continue
 			}
 
-			g.seen = append(g.seen, i)
-			temp := g.getNextNode(i, append(path, i))
-			if temp.tile == 1 {
-				return temp
+			g.seen[i] = true
+			//fmt.Println("i:", i.i)
+			//fmt.Println("yes: ", i.j)
+			tmp2 := append(*path, i)
+			temp := g.getNextNode(i, &tmp2)
+			//fmt.Println(temp.i, temp.j)
+			if len(*temp) > 0 && (*temp)[len(*temp)-1].entity == 1 {
+				g.path = temp
+				return path
 			}
 		}
 	}
 
-	temp := Node{}
-	return &temp
+	tmp := make([]*Node, 0)
+	return &tmp
 }
 
 // Dimension of the gmae
@@ -304,7 +322,7 @@ func main() {
 	createGhosts(1)
 
 	for _, i := range ghosts {
-		fmt.Println("at main:", i)
+		//fmt.Println("at main:", i)
 		go i.moveToPacman()
 	}
 
@@ -335,6 +353,10 @@ func createNodes() {
 		nodeLayout[i] = make([]Node, Dimension)
 		for j := range layout[i] {
 			nodeLayout[i][j] = Node{tile: layout[i][j], hasDot: true, i: i, j: j, visual: layout[i][j], next: make([]*Node, 4)}
+			temp := Node{}
+			for k := range nodeLayout[i][j].next {
+				nodeLayout[i][j].next[k] = &temp
+			}
 
 			if i > 0 {
 				nodeLayout[i-1][j].next[3] = &nodeLayout[i][j]
@@ -361,7 +383,8 @@ func createGhosts(n int) {
 	ghosts = make([]*Ghost, n)
 
 	for i := range ghosts {
-		ghosts[i] = &Ghost{currentNode: randomEmptyWalkableTile()}
+		tmp := make([]*Node, 0)
+		ghosts[i] = &Ghost{currentNode: randomEmptyWalkableTile(), path: &tmp}
 		ghosts[i].currentNode.entity = 2
 		ghosts[i].currentNode.visual = 4
 		//visualNodes[ghosts[i].currentNode.i][ghosts[i].currentNode.j].updateTex(renderer, ghosts[i].currentNode.visual)
@@ -413,15 +436,15 @@ func visualSetup() {
 		fmt.Println("initializing renderer:", err)
 		return
 	}
-	fmt.Println("renderer created")
+	//fmt.Println("renderer created")
 	defer renderer.Destroy()
 
 	//plr = newPlayer(renderer)
 
 	visualNodes = getVisualNodes(renderer, layout)
-	for _, i := range ghosts {
+	/*for _, i := range ghosts {
 		visualNodes[i.currentNode.i][i.currentNode.j].updateTex(renderer, i.currentNode.visual)
-	}
+	}*/
 	go pacman.move()
 
 	for {
@@ -435,7 +458,7 @@ func visualSetup() {
 		renderer.Clear()
 
 		//plr.draw(renderer)
-		drawVisualNodes(visualNodes, renderer)
+		drawVisualNodes(visualNodes, renderer, nodeLayout)
 
 		renderer.Present()
 	}

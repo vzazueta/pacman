@@ -55,9 +55,10 @@ func getVisualNodes(renderer *sdl.Renderer, layout [][]int) [][]visualNode {
 	return output
 }
 
-func drawVisualNodes(visualNodes [][]visualNode, renderer *sdl.Renderer) {
-	for _, nodeRow := range visualNodes {
-		for _, node := range nodeRow {
+func drawVisualNodes(visualNodes [][]visualNode, renderer *sdl.Renderer, nodeLayout [][]Node) {
+	for i, nodeRow := range visualNodes {
+		for j, node := range nodeRow {
+			node.updateTex(renderer, nodeLayout[i][j].visual)
 			node.draw(renderer)
 		}
 	}
