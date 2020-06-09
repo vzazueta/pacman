@@ -110,20 +110,21 @@ func (p *Pacman) walk() {
 
 	p.currentNode.entity = 0
 	p.currentNode.visual = 2
-	visualNodes[p.currentNode.i][p.currentNode.j].getCoin(renderer)
+	visualNodes[p.currentNode.i][p.currentNode.j].updateTex(renderer, p.currentNode.visual)
 
 	p.currentNode = next
 	p.currentNode.entity = 1
 	p.currentNode.hasDot = false
 	p.currentNode.visual = 3
+	visualNodes[p.currentNode.i][p.currentNode.j].updateTex(renderer, p.currentNode.visual)
 }
 
 func (p *Pacman) move() {
-
+	visualNodes[p.currentNode.i][p.currentNode.j].updateTex(renderer, p.currentNode.visual)
 	for {
 		//printLayout()
 		p.walk()
-		//time.Sleep(3000 * time.Millisecond)
+		time.Sleep(200 * time.Millisecond)
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 			switch t := event.(type) {
 			case *sdl.KeyboardEvent:
@@ -228,18 +229,19 @@ func (g *Ghost) walk(direction int) {
 	g.currentNode.entity = 2
 	g.currentNode.visual = 4
 
+	fmt.Println("at walk: ", g)
 	g.moveToPacman()
 }
 
 func (g *Ghost) moveToPacman() {
 	g.seen = make([]*Node, 1)
 	g.seen[0] = g.currentNode
-	g.walk(getAdjacentDirection(g.currentNode, g.getNextNode(g.currentNode, make([]*Node, 0))))
+	//g.walk(getAdjacentDirection(g.currentNode, g.getNextNode(g.currentNode, make([]*Node, 0))))
 	time.Sleep(3000 * time.Millisecond)
 }
 
 func (g *Ghost) getNextNode(node *Node, path []*Node) *Node {
-	if node.entity == 3 {
+	if node.entity == 1 {
 		return path[0]
 	}
 
@@ -288,12 +290,9 @@ var layout = [][]int{
 
 var nodeLayout [][]Node
 var pacman Pacman
-var ghosts []Ghost
+var ghosts []*Ghost
 var visualNodes [][]visualNode
-var plr player
 var renderer *sdl.Renderer
-
-//var load chan int
 
 var done chan int
 
@@ -302,18 +301,18 @@ func main() {
 
 	createNodes()
 	createPacman()
-	createGhosts(0)
+	createGhosts(1)
 
 	for _, i := range ghosts {
+		fmt.Println("at main:", i)
 		go i.moveToPacman()
 	}
-
-	//go visualSetup()
 
 	<-done
 }
 
 func gameover() {
+	fmt.Println("you dead")
 	done <- 0
 	os.Exit(1)
 }
@@ -359,13 +358,16 @@ func createPacman() {
 }
 
 func createGhosts(n int) {
-	ghosts = make([]Ghost, n)
+	ghosts = make([]*Ghost, n)
 
-	for _, i := range ghosts {
-		i = Ghost{currentNode: randomEmptyWalkableTile()}
-		i.currentNode.entity = 2
-		i.currentNode.visual = 4
+	for i := range ghosts {
+		ghosts[i] = &Ghost{currentNode: randomEmptyWalkableTile()}
+		ghosts[i].currentNode.entity = 2
+		ghosts[i].currentNode.visual = 4
+		//visualNodes[ghosts[i].currentNode.i][ghosts[i].currentNode.j].updateTex(renderer, ghosts[i].currentNode.visual)
 	}
+
+	//fmt.Println("lal: ", ghosts)
 }
 
 func randomEmptyWalkableTile() *Node {
@@ -414,9 +416,12 @@ func visualSetup() {
 	fmt.Println("renderer created")
 	defer renderer.Destroy()
 
-	plr = newPlayer(renderer)
+	//plr = newPlayer(renderer)
 
 	visualNodes = getVisualNodes(renderer, layout)
+	for _, i := range ghosts {
+		visualNodes[i.currentNode.i][i.currentNode.j].updateTex(renderer, i.currentNode.visual)
+	}
 	go pacman.move()
 
 	for {
@@ -429,7 +434,7 @@ func visualSetup() {
 		renderer.SetDrawColor(0, 0, 0, 0)
 		renderer.Clear()
 
-		plr.draw(renderer)
+		//plr.draw(renderer)
 		drawVisualNodes(visualNodes, renderer)
 
 		renderer.Present()

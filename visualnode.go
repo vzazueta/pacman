@@ -15,13 +15,23 @@ type visualNode struct {
 	x, y float64
 }
 
-func (n *visualNode) getCoin(renderer *sdl.Renderer){
-	n.tex = textureFromBMP(renderer, "sprites/empty.bmp")
+func (n *visualNode) updateTex(renderer *sdl.Renderer, visual int) {
+	switch visual {
+	case 2:
+		n.tex = textureFromBMP(renderer, "sprites/empty.bmp")
+	case 3:
+		n.tex = textureFromBMP(renderer, "sprites/player.bmp")
+	case 4:
+		n.tex = textureFromBMP(renderer, "sprites/player.bmp")
+	}
+	/*n.x = xcoord
+	n.y = ycoord*/
+
 }
 
 func newNode(renderer *sdl.Renderer, xcoord float64, ycoord float64, visual int) (n visualNode) {
 
-	switch visual{
+	switch visual {
 	case 0:
 		n.tex = textureFromBMP(renderer, "sprites/wall.bmp")
 	case 1:
