@@ -39,7 +39,7 @@ func updateTexture() {
 func getVisualNodes(renderer *sdl.Renderer, layout [][]int) [][]visualNode {
 	cellSize := screenWidth / Dimension
 	// read from pacman.go layout
-	fmt.Println(cellSize)
+	//fmt.Println(cellSize)
 	output := make([][]visualNode, Dimension)
 
 	yPos := cellSize / 2.0
@@ -55,7 +55,7 @@ func getVisualNodes(renderer *sdl.Renderer, layout [][]int) [][]visualNode {
 		yPos += cellSize
 
 	}
-	fmt.Println(len(output))
+	//fmt.Println(len(output))
 	return output
 }
 

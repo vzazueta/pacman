@@ -16,8 +16,8 @@ type player struct {
 func newPlayer(renderer *sdl.Renderer) (p player) {
 
 	p.tex = textureFromBMP(renderer, "sprites/player.bmp")
-	p.x = 50
-	p.y = 50
+	p.x = screenWidth / 2.0
+	p.y = 850
 
 	return p
 }

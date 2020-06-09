@@ -1,12 +1,14 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"math/rand"
 	"os"
 	"time"
 
 	"github.com/veandco/go-sdl2/sdl"
+	"github.com/veandco/go-sdl2/ttf"
 )
 
 /*
@@ -28,11 +30,18 @@ VISUAL:
 
 DIRECTION:
 NONE -> -1
-LEFT -> 0
+RIGHT -> 0
 UP -> 1
 LEFT -> 2
 DOWN -> 3
 */
+
+var (
+	coins        int
+	points       int
+	solidTexture *sdl.Texture
+	solidSurface *sdl.Surface
+)
 
 // Node is a tile
 type Node struct {
@@ -50,9 +59,14 @@ type Pacman struct {
 	direction     int
 	nextDirection int
 	currentNode   *Node
+	dead          bool
 }
 
 func (p *Pacman) walk() {
+	if p.dead {
+		return
+	}
+
 	temp := Node{}
 	next := &temp
 
@@ -105,6 +119,9 @@ func (p *Pacman) walk() {
 	}
 
 	if next.entity == 2 {
+		p.currentNode.entity = 0
+		p.currentNode.visual = 2
+		p.dead = true
 		gameover()
 	}
 
@@ -114,6 +131,19 @@ func (p *Pacman) walk() {
 
 	p.currentNode = next
 	p.currentNode.entity = 1
+
+	if p.currentNode.hasDot {
+		coins--
+		points += 100
+		createFont(renderer, "")
+		//fmt.Println("coins: ", coins)
+		if coins < 1 {
+			p.currentNode.hasDot = false
+			p.currentNode.visual = 3
+			win()
+		}
+	}
+
 	p.currentNode.hasDot = false
 	p.currentNode.visual = 3
 	//visualNodes[p.currentNode.i][p.currentNode.j].updateTex(renderer, p.currentNode.visual)
@@ -146,38 +176,11 @@ func (p *Pacman) move() {
 
 			case *sdl.QuitEvent:
 				fmt.Println("finish")
-				done <- 0
+				//done <- 0
 				os.Exit(1)
 			}
 		}
 	}
-
-	/*for {
-
-	}*/
-
-	//printLayout()
-	//p.walk()
-	//time.Sleep(200 * time.Millisecond)
-
-	/*for {
-		keys := sdl.GetKeyboardState()
-
-		if keys[sdl.SCANCODE_LEFT] == 1 {
-			fmt.Println("left")
-			p.nextDirection = 2
-		} else if keys[sdl.SCANCODE_RIGHT] == 1 {
-			fmt.Println("right")
-			p.nextDirection = 0
-		} else if keys[sdl.SCANCODE_UP] == 1 {
-			fmt.Println("up")
-			p.nextDirection = 1
-		} else if keys[sdl.SCANCODE_DOWN] == 1 {
-			fmt.Println("down")
-			p.nextDirection = 3
-		}
-		continue
-	}*/
 }
 
 // Ghost is the enemy
@@ -216,6 +219,17 @@ func (g *Ghost) walk(direction int) {
 	}
 
 	if next.entity == 1 {
+		g.currentNode.entity = 0
+		if g.currentNode.hasDot {
+			g.currentNode.visual = 1
+		} else {
+			g.currentNode.visual = 2
+		}
+
+		g.currentNode = next
+		g.currentNode.entity = 2
+		g.currentNode.visual = 4
+		pacman.dead = true
 		gameover()
 	}
 
@@ -229,10 +243,6 @@ func (g *Ghost) walk(direction int) {
 	g.currentNode = next
 	g.currentNode.entity = 2
 	g.currentNode.visual = 4
-
-	//fmt.Println("at walk: ", g)
-	//visualNodes[g.currentNode.i][g.currentNode.j].updateTex(renderer, g.currentNode.visual)
-	//g.moveToPacman()
 }
 
 func (g *Ghost) moveToPacman() {
@@ -243,14 +253,14 @@ func (g *Ghost) moveToPacman() {
 
 		tmp := make([]*Node, 0)
 		g.getNextNode(g.currentNode, &tmp)
-		fmt.Println("the length: ", len(*g.path))
-		for _, k := range *g.path {
-			fmt.Printf("uwu: %d, %d\n", k.i, k.j)
-		}
+		//fmt.Println("the length: ", len(*g.path))
+		/*for _, k := range *g.path {
+			//fmt.Printf("uwu: %d, %d\n", k.i, k.j)
+		}*/
 		//g.moveToPacman()
 	} else {
 		g.walk(getAdjacentDirection(g.currentNode, (*g.path)[0]))
-		fmt.Println(len(*g.path))
+		//fmt.Println(len(*g.path))
 		tmp := (*g.path)[1:]
 		g.path = &tmp
 	}
@@ -331,15 +341,20 @@ var pacman Pacman
 var ghosts []*Ghost
 var visualNodes [][]visualNode
 var renderer *sdl.Renderer
+var plr player
 
 var done chan int
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
 
+	ghostNum := flag.Int("n", 5, "an int: number of ghosts")
+	flag.Parse()
+	ttf.Init()
 	createNodes()
 	createPacman()
-	createGhosts(2)
+
+	createGhosts(*ghostNum)
 
 	for _, i := range ghosts {
 		//fmt.Println("at main:", i)
@@ -350,8 +365,18 @@ func main() {
 }
 
 func gameover() {
-	fmt.Println("you dead")
-	done <- 0
+	//fmt.Println("you dead")
+	createFont(renderer, "You Lose!!")
+	time.Sleep(4000 * time.Millisecond)
+	//done <- 0
+	os.Exit(1)
+}
+
+func win() {
+	//fmt.Println("ganar")
+	//done <- 0
+	createFont(renderer, "You Win!!")
+	time.Sleep(5000 * time.Millisecond)
 	os.Exit(1)
 }
 
@@ -368,10 +393,15 @@ func getAdjacentDirection(node1, node2 *Node) int {
 }
 
 func createNodes() {
+	coins = 0
 	nodeLayout = make([][]Node, Dimension)
 	for i := range layout {
 		nodeLayout[i] = make([]Node, Dimension)
 		for j := range layout[i] {
+			if layout[i][j] == 1 {
+				coins++
+			}
+
 			nodeLayout[i][j] = Node{tile: layout[i][j], hasDot: true, i: i, j: j, visual: layout[i][j], next: make([]*Node, 4)}
 			temp := Node{}
 			for k := range nodeLayout[i][j].next {
@@ -393,10 +423,14 @@ func createNodes() {
 }
 
 func createPacman() {
-	pacman = Pacman{nextDirection: -1, currentNode: randomEmptyWalkableTile()}
+	pacman = Pacman{nextDirection: -1, currentNode: randomEmptyWalkableTile(), dead: false}
 	pacman.currentNode.entity = 1
 	pacman.currentNode.hasDot = false
 	pacman.currentNode.visual = 3
+
+	coins--
+	points += 100
+	//createFont(renderer)
 }
 
 func createGhosts(n int) {
@@ -460,7 +494,6 @@ func visualSetup() {
 	defer renderer.Destroy()
 
 	initTex(renderer)
-
 	//plr = newPlayer(renderer)
 
 	visualNodes = getVisualNodes(renderer, layout)
@@ -481,7 +514,44 @@ func visualSetup() {
 
 		//plr.draw(renderer)
 		drawVisualNodes(visualNodes, renderer, nodeLayout)
+		drawFont()
 
 		renderer.Present()
 	}
+
+}
+
+func createFont(renderer *sdl.Renderer, text string) {
+	var font *ttf.Font
+	var err error
+
+	if font, err = ttf.OpenFont("font/Symtext.ttf", 40); err != nil {
+		fmt.Printf("Failed to open font: %s\n", err)
+		return
+	}
+	if len(text) < 1 {
+		if solidSurface, err = font.RenderUTF8Solid(fmt.Sprintf("Score: %d", points), sdl.Color{R: 255, G: 255, B: 255, A: 255}); err != nil {
+			fmt.Printf("Failed to render text: %s\n", err)
+			return
+		}
+	} else {
+		if solidSurface, err = font.RenderUTF8Solid(text, sdl.Color{R: 255, G: 255, B: 255, A: 255}); err != nil {
+			fmt.Printf("Failed to render text: %s\n", err)
+			return
+		}
+	}
+
+	if solidTexture, err = renderer.CreateTextureFromSurface(solidSurface); err != nil {
+		fmt.Printf("Failed to create texture: %s\n", err)
+		return
+	}
+
+	solidSurface.Free()
+
+	font.Close()
+
+}
+
+func drawFont() {
+	renderer.Copy(solidTexture, nil, &sdl.Rect{W: 800, H: 100, X: 0, Y: 800})
 }
