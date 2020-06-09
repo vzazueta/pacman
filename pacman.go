@@ -319,7 +319,7 @@ func main() {
 
 	createNodes()
 	createPacman()
-	createGhosts(1)
+	createGhosts(2)
 
 	for _, i := range ghosts {
 		//fmt.Println("at main:", i)
