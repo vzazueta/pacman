@@ -7,7 +7,15 @@ import (
 // relacionar numero de estado con sprite
 
 const (
-	nodeSize = 50
+	nodeSize = 32
+)
+
+var (
+	ghostTex  *sdl.Texture
+	wallTex   *sdl.Texture
+	coinTex   *sdl.Texture
+	emptyTex  *sdl.Texture
+	pacmanTex *sdl.Texture
 )
 
 type visualNode struct {
@@ -15,18 +23,26 @@ type visualNode struct {
 	x, y float64
 }
 
+func initTex(renderer *sdl.Renderer) {
+	wallTex = textureFromBMP(renderer, "sprites/tile005.bmp")
+	coinTex = textureFromBMP(renderer, "sprites/tile003.bmp")
+	emptyTex = textureFromBMP(renderer, "sprites/tile002.bmp")
+	pacmanTex = textureFromBMP(renderer, "sprites/tile00.bmp")
+	ghostTex = textureFromBMP(renderer, "sprites/tile004.bmp")
+}
+
 func (n *visualNode) updateTex(renderer *sdl.Renderer, visual int) {
 	switch visual {
 	case 0:
-		n.tex = textureFromBMP(renderer, "sprites/wall.bmp")
+		n.tex = wallTex
 	case 1:
-		n.tex = textureFromBMP(renderer, "sprites/node.bmp")
+		n.tex = coinTex
 	case 2:
-		n.tex = textureFromBMP(renderer, "sprites/empty.bmp")
+		n.tex = emptyTex
 	case 3:
-		n.tex = textureFromBMP(renderer, "sprites/player.bmp")
+		n.tex = pacmanTex
 	case 4:
-		n.tex = textureFromBMP(renderer, "sprites/player.bmp")
+		n.tex = ghostTex
 	}
 }
 
@@ -34,9 +50,9 @@ func newNode(renderer *sdl.Renderer, xcoord float64, ycoord float64, visual int)
 
 	switch visual {
 	case 0:
-		n.tex = textureFromBMP(renderer, "sprites/wall.bmp")
+		n.tex = textureFromBMP(renderer, "sprites/tile005.bmp")
 	case 1:
-		n.tex = textureFromBMP(renderer, "sprites/node.bmp")
+		n.tex = textureFromBMP(renderer, "sprites/tile003.bmp")
 	}
 	n.x = xcoord
 	n.y = ycoord

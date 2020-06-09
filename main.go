@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	screenWidth             = 600.0
-	screenHeight            = 800.0
+	screenWidth             = 800.0
+	screenHeight            = 900.0
 	death_sound_path        = "soundeffects/pacman_death.mp3"
 	munch_sound_path        = "soundeffects/pacman_chomp.mp3"
 	intermission_sound_path = "soundeffects/pacman_intermission.mp3"
@@ -30,6 +30,10 @@ func textureFromBMP(renderer *sdl.Renderer, filename string) *sdl.Texture {
 	}
 
 	return tex
+}
+
+func updateTexture() {
+
 }
 
 func getVisualNodes(renderer *sdl.Renderer, layout [][]int) [][]visualNode {
